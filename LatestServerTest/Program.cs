@@ -6,104 +6,111 @@ using System.Threading;
 using System.Threading.Tasks;
 
 public class LatestServerTest {
-    static Client client = new Client();
-
     static void Main(string[] args) {
         Server server = new Server();
         server.Listen();
         server.AcceptTcpClientAsync();
-        
         Client client = new Client();
         client.ConnectToServer();
 
-        server.SendMsg("test");
+        //Thread.Sleep(1000);
+        //client.Close();
+        //Console.WriteLine("client closed");
 
+        Thread.Sleep(1000);
+        if (server.ClientConnected) {
+            client.GetDataAsync(client.ProcessData);
+            Console.WriteLine("before sending test msgs");
+            Thread.Sleep(1000);
+            server.SendMsg("test");
+            server.SendMsg("test2");
+            server.SendMsg("test3");
+        }
         Console.ReadLine();
     }
-    //public static async void GameController() {
-    //    Client client = new Client();
-    //    //Client client2 = new Client();
-    //    await client.ConnectToServer();
-    //}
 
     public class Server {
         private static int PORT = 11000;
         private static IPAddress IPADDRESS = IPAddress.Loopback;
-        private static TcpListener tcpListener;
-        private static TcpClient tcpClient;
-        private static StreamWriter streamWriter;
-        private static bool clientConnected;
+        private TcpListener tcpListener;
+        private TcpClient tcpClient;
+        private Socket tcpSocket;
+        private StreamWriter streamWriter;
+        private bool clientConnected;
 
-        public static bool ClientConnected { get => clientConnected; set => clientConnected = value; }
+        public bool ClientConnected { get => clientConnected; private set => clientConnected = value; }
 
         public void Listen() {
-            Console.WriteLine("Starting Listener");
             tcpListener = new TcpListener(IPADDRESS, PORT);
             tcpListener.Start();
             Console.WriteLine("Listener Started");
         }
 
-        public void AcceptTcpClientAsync() {
-            //Task.Run()
-            tcpClient = tcpListener.AcceptTcpClientAsync().Result;
+        public async void AcceptTcpClientAsync() {
+            tcpClient = await tcpListener.AcceptTcpClientAsync();
+            //tcpSocket = await tcpListener.AcceptSocketAsync();
             ClientConnected = true;
+            Console.WriteLine("client connected");
         }
 
         public async void SendMsg(String message) {
             try {
-                using (NetworkStream networkStream = tcpClient.GetStream())
-                using (streamWriter = new StreamWriter(networkStream)) {
-                    await streamWriter.WriteLineAsync(message);
+                NetworkStream networkStream = tcpClient.GetStream();
+                streamWriter = new StreamWriter(networkStream);
+                await streamWriter.WriteLineAsync(message);
+                Console.WriteLine("after send msg");
+            } catch (Exception e) {
+                if (tcpClient != null) {
+                    tcpClient.Close();
+                    tcpClient = null;
+                    ClientConnected = false;
                 }
-            } catch (Exception) {
-                tcpClient.Close();
-                tcpClient = null;
-                ClientConnected = false;
-                //AcceptTcpClientAsync();
-                throw;
+                Console.WriteLine(e);
             }
         }
-
     }
 
     public class Client {
         private static int PORT = 11000;
         private static IPAddress IPADDRESS = IPAddress.Loopback;
         private TcpClient tcpClient;
-        private static StreamReader streamReader;
+        //private StreamReader streamReader;
         private bool connected = false;
 
-        public bool Connected { get => connected; private set => connected = value; }
+        public bool ConnectedToServer { get => connected; private set => connected = value; }
 
         public void ConnectToServer() {
             tcpClient = new TcpClient();
             Console.WriteLine("Trying to connect to Server...");
             tcpClient.ConnectAsync(IPADDRESS, PORT);
-            Connected = true;
+            ConnectedToServer = true;
             Console.WriteLine("Connected to Server");
         }
 
-        public void ReceiveMsgs() {
+        public async void GetDataAsync(Action<string> callback) {
             try {
-                using (NetworkStream networkStream = tcpClient.GetStream())
-                using (streamReader = new StreamReader(networkStream)) {
-                    while (Connected) {
-                        string dataFromClient = streamReader.ReadLineAsync().Result;
-                        Console.WriteLine("Client: " + dataFromClient);
-
-                        
-                    }
-                };
+                NetworkStream networkStream = tcpClient.GetStream();
+                StreamReader streamReader = new StreamReader(networkStream);
+                while (true) {
+                    Console.WriteLine("in receive");
+                    string dataFromClient = await streamReader.ReadLineAsync();
+                    Console.WriteLine("in receive after read");
+                    callback(dataFromClient);
+                }
             } catch (Exception e) {
                 //if (e is SocketException || e is IOException || e is InvalidOperationException) {}
                 Console.WriteLine("HERE :::" + e);
             }
         }
+        public void ProcessData(string callback) {
+            Console.WriteLine("Callback: " + callback);
+        }
         public void Close() {
             if (tcpClient != null) {
+                Console.WriteLine("closing tcpClient");
                 tcpClient.Close();
                 tcpClient = null;
-                Connected = false;
+                ConnectedToServer = false;
             }
         }
     }
