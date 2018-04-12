@@ -1,231 +1,96 @@
-﻿using System;
-using System.IO;
+﻿using Impinj.OctaneSdk;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
 
-public class LatestServerTest {
+public class Program {
+    private static int PORT = 11000;
+    private static IPAddress IPADDRESS = IPAddress.Loopback;
+    private static Server server;
+    private static RFIDController rfidController;
+    private static List<Ball> balls = new List<Ball>();
+
     static void Main(string[] args) {
-        Server server = new Server();
-        server.Listen();
+        server = new Server();
+        rfidController = new RFIDController();
+
+        server.Listen(IPADDRESS, PORT);
         server.AcceptTcpClientAsync();
-        Client client = new Client();
-        client.ConnectToServer();
 
-        //Thread.Sleep(1000);
-        //client.Close();
-        //Console.WriteLine("client closed");
+        rfidController.StartReader();
+        rfidController.rfidReader.TagsReported += OnTagsReported;
 
-        Thread.Sleep(1000);
+        String helpText = "Type x to end server, s to send a group of test messages to the client or d to drop and reaquire a client";
+        Console.WriteLine(helpText);
+        bool shutdown = false;
+        while (shutdown != true) {
+            String choice = Console.ReadLine();
+            switch (choice) {
+                case "x":
+                    shutdown = true;
+                    break;
+                case "s":
+                    if (server.ClientConnected) {
+                        SendTestMessages();
+                    } else {
+                        Console.WriteLine("Client is not connected to send messages to");
+                    }
+                    break;
+                case "d":
+                    server.ResetClient();
+                    server.AcceptTcpClientAsync();
+                    Console.WriteLine(helpText);
+                    break;
+                default:
+                    Console.WriteLine(helpText);
+                    break;
+            }
+        }
+    }
+    
+    private async static void OnTagsReported(ImpinjReader sender, TagReport report) {
+        Tag currentBall = report.Tags[0];
+        Ball pastSighting = new Ball();
+
+        //The if statements below checks if the tag is different enough from the previous time we've seen it to bother sending
+        if (balls.Any(b => b.Epc.ToString() == currentBall.Epc.ToString())) {
+            pastSighting = balls.Where(t => t.Epc.ToString() == currentBall.Epc.ToString()).First();
+            ulong prevTagLastPocketedTime = Convert.ToUInt64(pastSighting.LastPocketedTime.ToString());
+            ulong tagPocketedTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
+            if (tagPocketedTime < (prevTagLastPocketedTime + rfidController.TimeBetweenUpdates)) {
+                Console.WriteLine("return from pocketedTime");
+                return;
+            }
+            pastSighting.LastPocketedTime = tagPocketedTime;
+            Console.WriteLine("Pocketed: " + currentBall.Epc + " on Antenna: " + currentBall.AntennaPortNumber);
+            
+            //update ball list with current ball
+            balls[balls.FindIndex(el => el.Epc.ToString() == currentBall.Epc.ToString())] = pastSighting;
+        } else {
+            pastSighting.Epc = currentBall.Epc.ToString();
+            pastSighting.Antenna = currentBall.AntennaPortNumber;
+            pastSighting.LastSeenTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
+            pastSighting.LastPocketedTime = 0;
+            pastSighting.TableRssi = new double[17];
+            pastSighting.TableRssi[currentBall.AntennaPortNumber] = currentBall.PeakRssiInDbm;
+
+            balls.Add(pastSighting);
+        }
         if (server.ClientConnected) {
-            client.GetDataAsync(client.ProcessData);
-            Console.WriteLine("before sending test msgs");
-            Thread.Sleep(1000);
-            server.SendMsg("test");
-            server.SendMsg("test2");
-            server.SendMsg("test3");
-        }
-        Console.ReadLine();
-    }
-
-    public class Server {
-        private static int PORT = 11000;
-        private static IPAddress IPADDRESS = IPAddress.Loopback;
-        private TcpListener tcpListener;
-        private TcpClient tcpClient;
-        private Socket tcpSocket;
-        private StreamWriter streamWriter;
-        private bool clientConnected;
-
-        public bool ClientConnected { get => clientConnected; private set => clientConnected = value; }
-
-        public void Listen() {
-            tcpListener = new TcpListener(IPADDRESS, PORT);
-            tcpListener.Start();
-            Console.WriteLine("Listener Started");
-        }
-
-        public async void AcceptTcpClientAsync() {
-            tcpClient = await tcpListener.AcceptTcpClientAsync();
-            //tcpSocket = await tcpListener.AcceptSocketAsync();
-            ClientConnected = true;
-            Console.WriteLine("client connected");
-        }
-
-        public async void SendMsg(String message) {
-            try {
-                NetworkStream networkStream = tcpClient.GetStream();
-                streamWriter = new StreamWriter(networkStream);
-                await streamWriter.WriteLineAsync(message);
-                Console.WriteLine("after send msg");
-            } catch (Exception e) {
-                if (tcpClient != null) {
-                    tcpClient.Close();
-                    tcpClient = null;
-                    ClientConnected = false;
-                }
-                Console.WriteLine(e);
-            }
+            Console.WriteLine(currentBall.Epc + " sent");
+            //Console.WriteLine("");
+            String json = Newtonsoft.Json.JsonConvert.SerializeObject(pastSighting);
+            await server.SendMsgAsync(json);
+            pastSighting.Epc = currentBall.Epc.ToString();
+            pastSighting.Antenna = currentBall.AntennaPortNumber;
+            pastSighting.TableRssi[currentBall.AntennaPortNumber] = currentBall.PeakRssiInDbm;
+            pastSighting.LastSeenTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
         }
     }
 
-    public class Client {
-        private static int PORT = 11000;
-        private static IPAddress IPADDRESS = IPAddress.Loopback;
-        private TcpClient tcpClient;
-        //private StreamReader streamReader;
-        private bool connected = false;
-
-        public bool ConnectedToServer { get => connected; private set => connected = value; }
-
-        public void ConnectToServer() {
-            tcpClient = new TcpClient();
-            Console.WriteLine("Trying to connect to Server...");
-            tcpClient.ConnectAsync(IPADDRESS, PORT);
-            ConnectedToServer = true;
-            Console.WriteLine("Connected to Server");
-        }
-
-        public async void GetDataAsync(Action<string> callback) {
-            try {
-                NetworkStream networkStream = tcpClient.GetStream();
-                StreamReader streamReader = new StreamReader(networkStream);
-                while (true) {
-                    Console.WriteLine("in receive");
-                    string dataFromClient = await streamReader.ReadLineAsync();
-                    Console.WriteLine("in receive after read");
-                    callback(dataFromClient);
-                }
-            } catch (Exception e) {
-                //if (e is SocketException || e is IOException || e is InvalidOperationException) {}
-                Console.WriteLine("HERE :::" + e);
-            }
-        }
-        public void ProcessData(string callback) {
-            Console.WriteLine("Callback: " + callback);
-        }
-        public void Close() {
-            if (tcpClient != null) {
-                Console.WriteLine("closing tcpClient");
-                tcpClient.Close();
-                tcpClient = null;
-                ConnectedToServer = false;
-            }
-        }
+    public static async void SendTestMessages() {
+        await server.SendMsgAsync("test1");
+        await server.SendMsgAsync("test2");
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /// <summary>
-    /// /////////////////////////////////////////
-    /// </summary>
-
-    //async public void Connect()
-    //{
-    //    TCPClient tcpClient = new TCPClient();
-    //    try {
-    //        await tcpClient.ConnectToServer();
-    //    } catch (SocketException e) {
-    //        if (e.ErrorCode == 10061) {
-    //            Console.WriteLine("Connection Refused; Listener not started");
-    //        }
-    //        Console.WriteLine("Error Code: "+ e.ErrorCode + " :: could not connect");
-    //        //Console.WriteLine(e.);
-    //    }
-
-    //}
-
-    //public class TCPClient {
-    //    private static int port = 11000;
-    //    private static IPAddress ipAddress = IPAddress.Loopback;
-    //    private static TcpClient tcpClient = new TcpClient();
-    //    //public bool connected = false;
-    //    public bool gameInPlay = false;
-
-    //    /// <summary>
-    //    /// replacement below
-    //    /// </summary>
-    //    /// <returns></returns>
-    //    public async Task ConnectToServer() {
-    //        while (true) {
-    //            Console.WriteLine("Trying to connect to Server...");
-    //            try {
-    //                await tcpClient.ConnectAsync(ipAddress, port);
-    //            } catch (Exception e) {
-    //                Console.WriteLine("here" +  e);
-    //            }
-    //            await tcpClient.ConnectAsync(ipAddress, port);
-    //            connected = true;
-    //            Console.WriteLine("Connected to Server");
-
-    //            using (NetworkStream networkStream = tcpClient.GetStream())
-    //            using (var reader = new StreamReader(networkStream))
-    //            using (var writer = new StreamWriter(networkStream)) {
-    //                writer.AutoFlush = true;
-    //                char keepalive = '0';
-    //                while (connected) {
-    //                    await writer.WriteLineAsync(keepalive);
-    //                    //timer and break?
-    //                    string dataFromClient = await reader.ReadLineAsync();
-    //                    //how to check loop counter here?
-    //                }
-    //            };
-    //        }     
-    //    }
-
-    //    //private static void OnTimedEvent(object source, ElapsedEventArgs e) {
-
-    //    //}
-
-    //    public async void GetData(Action<String> callback) {
-    //        try {
-    //            using (var networkStream = tcpClient.GetStream())
-    //            using (var reader = new StreamReader(networkStream))
-    //            using (var writer = new StreamWriter(networkStream)) {
-    //                writer.AutoFlush = true;
-    //                //TODO: toggle gameInPlay to off after game
-    //                while (gameInPlay) {
-    //                    string dataFromClient = await reader.ReadLineAsync();
-    //                    //makes sure client sends below
-    //                    //if is 1000 or 500 bytes then ball or keepalive
-
-    //                    int byteSize = System.Text.Encoding.Unicode.GetByteCount(dataFromClient);
-
-    //                    if (byteSize == 500) {
-
-
-    //                    }
-
-    //                    String returned = "return";
-    //                    callback(returned);
-    //                }
-    //            }
-    //        } catch (NullReferenceException e) {
-    //            Console.WriteLine(e);
-
-    //        } finally {
-    //            tcpClient.Close();
-    //            connected = false;
-    //        }
-    //    }
-    //}
 }
