@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{985EC202-7431-42E5-8DEA-33A1C5D5F14A}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>LatestServerTest</RootNamespace>
-    <AssemblyName>LatestServerTest</AssemblyName>
+    <RootNamespace>DigipoolServer</RootNamespace>
+    <AssemblyName>DigipoolServer</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
