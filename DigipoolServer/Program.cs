@@ -79,7 +79,7 @@ public class Program {
         }
         if (server.ClientConnected) {
             Console.WriteLine(currentBall.Epc + " sent");
-            //Console.WriteLine("");
+            Console.WriteLine("");
             String json = Newtonsoft.Json.JsonConvert.SerializeObject(pastSighting);
             await server.SendMsgAsync(json);
             pastSighting.Epc = currentBall.Epc.ToString();
