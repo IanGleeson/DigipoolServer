@@ -21,6 +21,10 @@ class RFIDController {
         }
         XDocument doc = XDocument.Load(settingsFilePath);
         readerAddress = doc.Root.Element("ReaderAddress").Value;
+        if (readerAddress == "") {
+            ReaderSettingsUI rs = new ReaderSettingsUI();
+            rs.ShowDialog();
+        }
         TimeBetweenUpdates = UInt64.Parse(doc.Root.Element("TimeBetweenUpdates").Value);
         signalVariance = Double.Parse(doc.Root.Element("SignalVariance").Value);
         try {
