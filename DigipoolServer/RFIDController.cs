@@ -14,12 +14,13 @@ class RFIDController {
     public ulong TimeBetweenUpdates { get => timeBetweenUpdates; set => timeBetweenUpdates = value; }
 
     public void StartReader() {
+        XDocument doc;
         if (!File.Exists(settingsFilePath)) {
             //open UI to configure settings
             ReaderSettingsUI rs = new ReaderSettingsUI();
             rs.ShowDialog();
         }
-        XDocument doc = XDocument.Load(settingsFilePath);
+        doc = XDocument.Load(settingsFilePath);
         readerAddress = doc.Root.Element("ReaderAddress").Value;
         if (readerAddress == "") {
             ReaderSettingsUI rs = new ReaderSettingsUI();

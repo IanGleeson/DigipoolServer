@@ -11,6 +11,7 @@ public class Program {
     private static RFIDController rfidController;
     private static List<Ball> balls = new List<Ball>();
 
+    [STAThread]
     static void Main(string[] args) {
         server = new Server();
         rfidController = new RFIDController();

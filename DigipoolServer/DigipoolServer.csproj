@@ -36,21 +36,23 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Downloads\readerSettings\ClientUI.exe</HintPath>
     </Reference>
-    <Reference Include="Impinj.OctaneSdk">
-      <HintPath>..\..\..\..\Downloads\Impinj.OctaneSdk\Impinj.OctaneSdk.dll</HintPath>
+    <Reference Include="Impinj.OctaneSdk, Version=2.30.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\OctaneSDK.2.30.1\lib\net461\Impinj.OctaneSdk.dll</HintPath>
     </Reference>
-    <Reference Include="LLRP">
-      <HintPath>..\..\..\..\Downloads\Impinj.OctaneSdk\LLRP.dll</HintPath>
+    <Reference Include="LLRP, Version=10.30.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\libltknet-sdk.10.30.1\lib\net461\LLRP.dll</HintPath>
     </Reference>
-    <Reference Include="LLRP.Impinj">
-      <HintPath>..\..\..\..\Downloads\Impinj.OctaneSdk\LLRP.Impinj.dll</HintPath>
+    <Reference Include="LLRP.Impinj, Version=10.30.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\libltknet-sdk.10.30.1\lib\net461\LLRP.Impinj.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Downloads\Impinj.OctaneSdk\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Renci.SshNet, Version=2016.0.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>packages\SSH.NET.2016.0.0\lib\net40\Renci.SshNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -70,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ClientUI.exe" />
