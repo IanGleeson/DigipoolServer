@@ -7,12 +7,13 @@ using System.Xml.Linq;
 class RFIDController {
     public ImpinjReader rfidReader = new ImpinjReader();
     private string settingsFilePath = "readerSettings.xml";
-    private string readerAddress; // "SpeedwayR-11-AD-98.local" //TEST: SpeedwayR-12-32-8B.local //TEST: SpeedwayR-12-4D-5B.local
+    private string readerAddress;  //Test Table: SpeedwayR-12-4D-B5.local
     private double signalVariance; //variance in signal strength before tag updates
     private ulong timeBetweenUpdates; //microseconds between tag updates
 
     public ulong TimeBetweenUpdates { get => timeBetweenUpdates; set => timeBetweenUpdates = value; }
 
+    /// <exception cref="OctaneSdkException">Thrown when we can't connect to the reader</exception>
     public void StartReader() {
         XDocument doc;
         if (!File.Exists(settingsFilePath)) {
@@ -28,13 +29,13 @@ class RFIDController {
         }
         TimeBetweenUpdates = UInt64.Parse(doc.Root.Element("TimeBetweenUpdates").Value);
         signalVariance = Double.Parse(doc.Root.Element("SignalVariance").Value);
+        Console.WriteLine("Reader Address: "+readerAddress);
+        Console.WriteLine("Time Between Updates: " + TimeBetweenUpdates);
+        Console.WriteLine("Signal Variance: " + signalVariance);
         try {
             rfidReader.Connect(readerAddress);
         } catch (OctaneSdkException e) {
-            Console.WriteLine(readerAddress);
-            Console.WriteLine("Could not connect to reader. Malformed .xml or connection timeout");
-            Console.WriteLine(e.Message);
-            Console.ReadLine();
+            throw e;
         }
         Settings settings = rfidReader.QueryDefaultSettings();
         settings.SearchMode = SearchMode.DualTarget;

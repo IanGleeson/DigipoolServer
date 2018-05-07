@@ -19,10 +19,16 @@ public class Program {
         server.Listen(IPADDRESS, PORT);
         server.AcceptTcpClientAsync();
 
-        rfidController.StartReader();
-        rfidController.rfidReader.TagsReported += OnTagsReported;
+        try {
+            rfidController.StartReader();
+            rfidController.rfidReader.TagsReported += OnTagsReported;
+        } catch (OctaneSdkException ode) {
+            Console.WriteLine("Could not connect to reader. Malformed .xml or connection timeout");
+            Console.WriteLine(ode.Message);
+            Console.ReadLine();
+        }
 
-        String helpText = "Type x to end server, s to send a group of test messages to the client or d to drop and reaquire a client";
+        String helpText = "Type x to end server, c to connect to the reader, s to send a group of test messages to the client or d to drop and reaquire a client";
         Console.WriteLine(helpText);
         bool shutdown = false;
         while (shutdown != true) {
@@ -42,6 +48,16 @@ public class Program {
                     server.ResetClient();
                     server.AcceptTcpClientAsync();
                     Console.WriteLine(helpText);
+                    break;
+                case "c":
+                    try {
+                        rfidController.StartReader();
+                        rfidController.rfidReader.TagsReported += OnTagsReported;
+                    } catch (OctaneSdkException ode) {
+                        Console.WriteLine("Could not connect to reader. Malformed .xml or connection timeout");
+                        Console.WriteLine(ode.Message);
+                        Console.ReadLine();
+                    }
                     break;
                 default:
                     Console.WriteLine(helpText);

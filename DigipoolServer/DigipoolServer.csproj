@@ -76,7 +76,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ClientUI.exe" />
-    <Content Include="readerSettings.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
