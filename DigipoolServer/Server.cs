@@ -68,6 +68,10 @@ class Server {
             Log("Server: " + io.Message);
             ResetClient();
             AcceptTcpClientAsync(message);
+        } catch (InvalidOperationException ioe) {
+            Log("Server: " + ioe.Message);
+            ResetClient();
+            AcceptTcpClientAsync(message);
         }
     }
 
