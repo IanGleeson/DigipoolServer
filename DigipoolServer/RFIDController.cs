@@ -39,6 +39,11 @@ class RFIDController {
         }
         Settings settings = rfidReader.QueryDefaultSettings();
         settings.SearchMode = SearchMode.DualTarget;
+        settings.LowDutyCycle = new LowDutyCycleSettings {
+            IsEnabled = true,
+            EmptyFieldTimeoutInMs = 10000,
+            FieldPingIntervalInMs = 300
+        };
         settings.Session = 2;
         settings.Report.Mode = ReportMode.Individual;
         settings.Report.IncludePeakRssi = true;
