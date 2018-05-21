@@ -5,8 +5,8 @@ using System.Linq;
 using System.Net;
 
 public class Program {
-    private static int PORT = 11000;
-    private static IPAddress IPADDRESS = IPAddress.Loopback;
+    private static readonly int PORT = 11000;
+    private static readonly IPAddress IPADDRESS = IPAddress.Loopback;
     private static Server server;
     private static RFIDController rfidController;
     private static List<Ball> balls = new List<Ball>();

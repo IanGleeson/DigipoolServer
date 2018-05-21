@@ -6,12 +6,10 @@ using System.Xml.Linq;
 
 class RFIDController {
     public ImpinjReader rfidReader = new ImpinjReader();
-    private string settingsFilePath = "readerSettings.xml";
+    private readonly string settingsFilePath = "readerSettings.xml";
     private string readerAddress;  //Test Table: SpeedwayR-12-4D-B5.local
     private double signalVariance; //variance in signal strength before tag updates
-    private ulong timeBetweenUpdates; //microseconds between tag updates
-
-    public ulong TimeBetweenUpdates { get => timeBetweenUpdates; set => timeBetweenUpdates = value; }
+    public ulong TimeBetweenUpdates { get; set; }//microseconds between tag updates
 
     /// <exception cref="OctaneSdkException">Thrown when we can't connect to the reader</exception>
     public void StartReader() {

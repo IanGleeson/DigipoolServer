@@ -10,8 +10,7 @@ class Server {
     private TcpClient tcpClient;
     private StreamWriter streamWriter;
     private NetworkStream networkStream;
-    private bool clientConnected = false;
-    public bool ClientConnected { get => clientConnected; private set => clientConnected = value; }
+    public bool ClientConnected { get; private set; } = false;
 
     /// <summary>
     /// Starts the TCPListener at the specified socket. Does not yet accept a client.
