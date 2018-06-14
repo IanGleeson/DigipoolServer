@@ -56,21 +56,30 @@ class Server {
     /// </summary>
     /// <param name="message"></param>
     public async Task SendMsgAsync(string message) {
-        try {
+        try
+        {
             await streamWriter.WriteLineAsync(message);
-            Console.WriteLine("Message sent");
-        } catch (ObjectDisposedException od) {
-            Log("Server: " + od.Message);
+        } catch (ObjectDisposedException od)
+        {
+            Log("Server: ObjectDisposedException" + od.Message);
+            Log(od.StackTrace);
             ResetClient();
             AcceptTcpClientAsync(message);
-        } catch (IOException io) {
-            Log("Server: " + io.Message);
+        } catch (IOException io)
+        {
+            Log("Server: IOException" + io.Message);
+            Log(io.StackTrace);
             ResetClient();
             AcceptTcpClientAsync(message);
-        } catch (InvalidOperationException ioe) {
-            Log("Server: " + ioe.Message);
+        } catch (InvalidOperationException ioe)
+        {
+            Log("Server: InvalidOperationException" + ioe.Message);
+            Log(ioe.StackTrace);
             ResetClient();
             AcceptTcpClientAsync(message);
+        } catch (Exception e) {
+            Log("Server: Exception" + e.Message);
+            Log(e.StackTrace);
         }
     }
 
@@ -83,8 +92,10 @@ class Server {
         }
     }
     public void Log(String lines) {
+        Console.WriteLine(lines);
         using (StreamWriter file = new StreamWriter("logfile.txt", true)) {
             file.WriteLine(DateTime.Now.ToString() + ": " + lines);
         }
+        //Console.ReadLine();
     }
 }

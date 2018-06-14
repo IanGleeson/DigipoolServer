@@ -76,11 +76,11 @@ public class Program {
             ulong prevTagLastPocketedTime = Convert.ToUInt64(pastSighting.LastPocketedTime.ToString());
             ulong tagPocketedTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
             if (tagPocketedTime < (prevTagLastPocketedTime + rfidController.TimeBetweenUpdates)) {
-                Console.WriteLine("return from pocketedTime");
+                //Console.WriteLine("return from pocketedTime");
                 return;
             }
             pastSighting.LastPocketedTime = tagPocketedTime;
-            Console.WriteLine("Pocketed: " + currentBall.Epc + " on Antenna: " + currentBall.AntennaPortNumber);
+            //Console.WriteLine("Pocketed: " + currentBall.Epc + " on Antenna: " + currentBall.AntennaPortNumber);
             
             //update ball list with current ball
             balls[balls.FindIndex(el => el.Epc.ToString() == currentBall.Epc.ToString())] = pastSighting;
@@ -96,7 +96,6 @@ public class Program {
         }
         if (server.ClientConnected) {
             Console.WriteLine(currentBall.Epc + " sent");
-            Console.WriteLine("");
             String json = Newtonsoft.Json.JsonConvert.SerializeObject(pastSighting);
             await server.SendMsgAsync(json);
             pastSighting.Epc = currentBall.Epc.ToString();
