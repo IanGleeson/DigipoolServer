@@ -2,6 +2,12 @@
 
 This server is for Digipool, a physical and virtual pool game. It reads in tags from an Impinj Revolution reader and sends them to a client.
 
+It must be on the same network as the Impinj reader to connect to it.
+
+It can be run as a console app through Visual Studio for debugging or installed as a service by running the following command on the administrator command line:
+Digipool.exe install
+The machine should then be restarted for it to take effect.
+
 To connect to the reader, an entry must be made in your C:/Windows/System32/drivers/etc/hosts file with the following contents like below:
 IPAddress       Reader Addesss
 

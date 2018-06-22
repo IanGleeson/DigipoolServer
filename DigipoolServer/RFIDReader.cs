@@ -2,9 +2,11 @@
 using Impinj.OctaneSdk;
 using System;
 using System.IO;
+using System.Net.NetworkInformation;
+using System.Text;
 using System.Xml.Linq;
 
-class RFIDController {
+class RFIDReader {
     public ImpinjReader rfidReader = new ImpinjReader();
     private readonly string settingsFilePath = "readerSettings.xml";
     private string readerAddress;  //Test Table: SpeedwayR-12-4D-B5.local
@@ -49,5 +51,23 @@ class RFIDController {
         settings.Report.IncludeAntennaPortNumber = true;
         rfidReader.ApplySettings(settings);
         rfidReader.Start();
+    }
+
+    //TODO  modify and use for reader disconnect event in future
+    private bool ReaderIsAvailable(string address)
+    {
+        Ping pingSender = new Ping();
+        PingOptions options = new PingOptions
+        {
+            DontFragment = true
+        };
+        string data = "1";
+        byte[] buffer = Encoding.ASCII.GetBytes(data);
+        int timeout = 120;
+        PingReply reply = pingSender.Send(address, timeout, buffer, options);
+        if (reply.Status == IPStatus.Success)
+            return true;
+        else
+            return false;
     }
 }
