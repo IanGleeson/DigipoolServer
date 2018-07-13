@@ -65,16 +65,17 @@ public class Controller
     {
         server = new Server();
         rfidController = new RFIDReader();
-
+        log.InfoFormat("Service has started");
         server.Listen(IPADDRESS, PORT);
         server.AcceptTcpClientAsync();
-
+        log.InfoFormat("client accepted");
         while (!rfidController.rfidReader.IsConnected)
         {
             try
             {
                 rfidController.StartReader();
                 rfidController.rfidReader.TagsReported += OnTagsReported;
+                log.InfoFormat("Reader started");
             } catch (OctaneSdkException ose)
             {
                 log.Info(ose.Message);
@@ -86,6 +87,8 @@ public class Controller
     }
     public void Stop()
     {
+        server.Stop();
+        rfidController.Stop();
         Console.WriteLine("stopped");
     }
 }

@@ -80,6 +80,9 @@
     <PackageReference Include="Topshelf">
       <Version>4.0.4</Version>
     </PackageReference>
+    <PackageReference Include="Topshelf.Log4Net">
+      <Version>4.0.4</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

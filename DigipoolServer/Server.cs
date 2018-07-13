@@ -31,6 +31,11 @@ class Server
             Controller.log.Error(ode.Message + " :: " + ode.StackTrace);
         }
     }
+    public void Stop()
+    {
+        tcpListener.Stop();
+        networkStream.Close();
+    }
     /// <summary>
     /// Asynchronously accepts a TCPClient and sets up streams to write to
     /// </summary>
@@ -43,15 +48,15 @@ class Server
             Console.WriteLine("Client connected");
             ClientConnected = true;
             networkStream = tcpClient.GetStream();
+            streamWriter = new StreamWriter(networkStream)
+            {
+                AutoFlush = true
+            };
         } catch (SocketException se) {
             Controller.log.Info(se.Message + " :: " + se.StackTrace);
         } catch (InvalidOperationException ioe) {
             Controller.log.Info(ioe.Message + " :: " + ioe.StackTrace);
         }
-        streamWriter = new StreamWriter(networkStream)
-        {
-            AutoFlush = true
-        };
     }
     /// <summary>
     /// Overload for AcceptTcpClientAsync. Used on reconnects to send dropped data to the client

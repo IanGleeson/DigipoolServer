@@ -19,8 +19,12 @@ public class Program {
                 s.WhenStarted(st => st.Start());
                 s.WhenStopped(st => st.Stop());
             });
+            x.OnException(ex =>
+            {
+                Controller.log.Error(ex);
+            });
             x.RunAsLocalSystem();
-
+            x.UseLog4Net();
             x.SetDisplayName("DigiPool Server");
             x.SetServiceName("DigiPool Server");
             x.SetDescription("Reads RFID's from an Impinj Reader and sends them to a specified socket");

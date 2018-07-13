@@ -53,6 +53,10 @@ class RFIDReader {
         rfidReader.Start();
     }
 
+    public void Stop()
+    {
+        rfidReader.Stop();
+    }
     //TODO  modify and use for reader disconnect event in future
     private bool ReaderIsAvailable(string address)
     {
