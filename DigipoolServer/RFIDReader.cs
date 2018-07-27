@@ -74,21 +74,4 @@ class RFIDReader {
     {
         rfidReader.Stop();
     }
-    //TODO  modify and use for reader disconnect event in future
-    private bool ReaderIsAvailable(string address)
-    {
-        Ping pingSender = new Ping();
-        PingOptions options = new PingOptions
-        {
-            DontFragment = true
-        };
-        string data = "1";
-        byte[] buffer = Encoding.ASCII.GetBytes(data);
-        int timeout = 120;
-        PingReply reply = pingSender.Send(address, timeout, buffer, options);
-        if (reply.Status == IPStatus.Success)
-            return true;
-        else
-            return false;
-    }
 }

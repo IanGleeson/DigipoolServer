@@ -12,7 +12,9 @@ To connect to the reader, an entry must be made in your C:/Windows/System32/driv
 IPAddress       Reader Addesss
 
 Example Entry:
-192.168.0.100		SpeedwayR-12-4D-B5.local
+169.254.1.1		SpeedwayR-12-4D-B5.local
+
+The default ip address for the reader is 169.254.1.1
 
 Reader Address is the address of the Impinj Reader.
 Signal Variance denotes the variance in signal strength allowed before a tag updates. i.e. If the tag is not moving, it won't update.
