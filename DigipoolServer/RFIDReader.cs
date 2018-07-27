@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 
 class RFIDReader {
@@ -35,7 +36,10 @@ class RFIDReader {
         try {
             rfidReader.Connect(readerAddress);
         } catch (OctaneSdkException e) {
-            throw e;
+            Console.WriteLine(e);
+            Console.WriteLine("Attempting to reconnect in 3 seconds...");
+            Thread.Sleep(3000);
+            StartReader();
         }
         Settings settings = rfidReader.QueryDefaultSettings();
         settings.SearchMode = SearchMode.DualTarget;
@@ -49,8 +53,21 @@ class RFIDReader {
         settings.Report.IncludePeakRssi = true;
         settings.Report.IncludeLastSeenTime = true;
         settings.Report.IncludeAntennaPortNumber = true;
+
+        settings.Keepalives.Enabled = true;
+        settings.Keepalives.PeriodInMs = 2000;
+        settings.Keepalives.EnableLinkMonitorMode = true;
+        settings.Keepalives.LinkDownThreshold = 5;
+        
+        rfidReader.ConnectionLost += OnConnectionLost;
+
         rfidReader.ApplySettings(settings);
         rfidReader.Start();
+    }
+
+    void OnConnectionLost(ImpinjReader reader)
+    {
+        StartReader();
     }
 
     public void Stop()
