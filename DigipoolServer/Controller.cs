@@ -11,9 +11,42 @@ public class Controller
     private static readonly int PORT = 56341;
     private static readonly IPAddress IPADDRESS = IPAddress.Loopback;
     private static Server server;
-    private static RFIDReader rfidController;
+    private static RFIDReader rfidReader;
     private static List<Ball> balls = new List<Ball>();
     public static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+    //Used for service methods. Do not alter method signature
+    public bool Start()
+    {
+        //log.InfoFormat("start");
+        server = new Server();
+        rfidReader = new RFIDReader();
+        log.InfoFormat("Service has started");
+        server.Listen(IPADDRESS, PORT);
+        server.AcceptTcpClientAsync();
+        log.InfoFormat("client accepted");
+        while (!rfidReader.impinjReader.IsConnected)
+        {
+            try
+            {
+                rfidReader.Start();
+                rfidReader.impinjReader.TagsReported += OnTagsReported;
+                rfidReader.impinjReader.ConnectionLost += OnConnectionLost;
+                log.InfoFormat("Reader started");
+            } catch (OctaneSdkException ose)
+            {
+                log.Info(ose.Message);
+            }
+            Thread.Sleep(3000);
+        }
+        return true;
+    }
+    public void Stop()
+    {
+        server.Stop();
+        rfidReader.Stop();
+        Console.WriteLine("stopped");
+    }
 
     private async static void OnTagsReported(ImpinjReader sender, TagReport report)
     {
@@ -26,7 +59,7 @@ public class Controller
             pastSighting = balls.Where(t => t.Epc.ToString() == currentBall.Epc.ToString()).First();
             ulong prevTagLastPocketedTime = Convert.ToUInt64(pastSighting.LastPocketedTime.ToString());
             ulong tagPocketedTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
-            if (tagPocketedTime < (prevTagLastPocketedTime + rfidController.TimeBetweenUpdates))
+            if (tagPocketedTime < (prevTagLastPocketedTime + rfidReader.TimeBetweenUpdates))
             {
                 //Console.WriteLine("return from pocketedTime");
                 return;
@@ -59,36 +92,8 @@ public class Controller
             pastSighting.LastSeenTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
         }
     }
-    
-    //Used for service methods // do not delete
-    public bool Start()
+    void OnConnectionLost(ImpinjReader reader)
     {
-        server = new Server();
-        rfidController = new RFIDReader();
-        log.InfoFormat("Service has started");
-        server.Listen(IPADDRESS, PORT);
-        server.AcceptTcpClientAsync();
-        log.InfoFormat("client accepted");
-        while (!rfidController.rfidReader.IsConnected)
-        {
-            try
-            {
-                rfidController.StartReader();
-                rfidController.rfidReader.TagsReported += OnTagsReported;
-                log.InfoFormat("Reader started");
-            } catch (OctaneSdkException ose)
-            {
-                log.Info(ose.Message);
-            }
-            Thread.Sleep(3000);
-        }
-        Console.WriteLine("started");
-        return true;
-    }
-    public void Stop()
-    {
-        server.Stop();
-        rfidController.Stop();
-        Console.WriteLine("stopped");
+        Start();
     }
 }
