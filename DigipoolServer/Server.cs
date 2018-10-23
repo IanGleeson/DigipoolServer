@@ -2,13 +2,14 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading.Tasks;
 
 class Server
 {
     private TcpListener tcpListener;
     private TcpClient tcpClient;
-    private StreamWriter streamWriter;
+    //private StreamWriter streamWriter;
     private NetworkStream networkStream;
     public bool ClientConnected { get; private set; } = false;
 
@@ -25,10 +26,10 @@ class Server
             Console.WriteLine("Listener Started");
         } catch (SocketException se)
         {
-            Controller.log.Error(se.Message + " :: " + se.StackTrace);
+            Console.WriteLine(se);
         } catch (ObjectDisposedException ode)
         {
-            Controller.log.Error(ode.Message + " :: " + ode.StackTrace);
+            Console.WriteLine(ode);
         }
     }
     public void Stop()
@@ -48,33 +49,40 @@ class Server
             Console.WriteLine("Client connected");
             ClientConnected = true;
             networkStream = tcpClient.GetStream();
-            streamWriter = new StreamWriter(networkStream)
-            {
-                AutoFlush = true
-            };
+            //streamWriter = new StreamWriter(networkStream)
+            //{
+            //    AutoFlush = true
+            //};
         } catch (SocketException se) {
-            Controller.log.Info(se.Message + " :: " + se.StackTrace);
+            Console.WriteLine(se);
         } catch (InvalidOperationException ioe) {
-            Controller.log.Info(ioe.Message + " :: " + ioe.StackTrace);
+            Console.WriteLine(ioe);
         }
     }
-    /// <summary>
-    /// Overload for AcceptTcpClientAsync. Used on reconnects to send dropped data to the client
-    /// </summary>
-    /// <param name="unsentMessage">The dropped data caught in an exception</param>
-    private async void AcceptTcpClientAsync(string unsentMessage)
-    {
-        Console.WriteLine("Waiting for client");
-        tcpClient = await tcpListener.AcceptTcpClientAsync();
-        Console.WriteLine("Client connected");
-        ClientConnected = true;
-        networkStream = tcpClient.GetStream();
-        streamWriter = new StreamWriter(networkStream)
-        {
-            AutoFlush = true
-        };
-        await SendMsgAsync(unsentMessage);
-    }
+
+    ///// <summary>
+    ///// Overload for AcceptTcpClientAsync. Used on reconnects to send dropped data to the client
+    ///// </summary>
+    ///// <param name="unsentMessage">The dropped data caught in an exception</param>
+    //private async void AcceptTcpClientAsync(string unsentMessage)
+    //{
+    //    Console.WriteLine("Waiting for client");
+    //    try
+    //    {
+    //        tcpClient = await tcpListener.AcceptTcpClientAsync();
+    //    } catch (Exception e)
+    //    {
+    //        Console.WriteLine(e);
+    //    }
+    //    Console.WriteLine("Client connected");
+    //    ClientConnected = true;
+    //    networkStream = tcpClient.GetStream();
+    //    streamWriter = new StreamWriter(networkStream)
+    //    {
+    //        AutoFlush = true
+    //    };
+    //    await SendMsgAsync(unsentMessage);
+    //}
 
     /// <summary>
     /// Writes a message to an open stream. This WILL write to a closed connection but on client reconnect the stream will
@@ -85,27 +93,26 @@ class Server
     {
         try
         {
-            await streamWriter.WriteLineAsync(message);
+            using (var streamWriter = new StreamWriter(networkStream, Encoding.UTF8, 1024, true))
+            {
+                await streamWriter.WriteLineAsync(message);
+            }
+            
         } catch (ObjectDisposedException od)
         {
-            Controller.log.Info(od);
-            ResetClient();
-            AcceptTcpClientAsync(message);
+            Console.WriteLine(od);
+            //ResetClient();
+            //AcceptTcpClientAsync();
         } catch (IOException io)
         {
-            Controller.log.Info(io);
-            ResetClient();
-            AcceptTcpClientAsync(message);
+            Console.WriteLine(io);
+            //ResetClient();
+            //AcceptTcpClientAsync();
         } catch (InvalidOperationException ioe)
         {
-            Controller.log.Info(ioe);
-            ResetClient();
-            AcceptTcpClientAsync(message);
-        } catch (Exception e)
-        {
-            Controller.log.Info(e);
-            ResetClient();
-            AcceptTcpClientAsync(message);
+            Console.WriteLine(ioe);
+            //ResetClient();
+            //AcceptTcpClientAsync();
         }
     }
 

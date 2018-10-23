@@ -16,12 +16,12 @@ public class Program {
             x.Service<Controller>(s =>
             {
                 s.ConstructUsing(name => new Controller());
-                s.WhenStarted(st => st.Start());
-                s.WhenStopped(st => st.Stop());
+                s.WhenStarted(c => c.Start());
+                s.WhenStopped(c => c.Stop());
             });
             x.OnException(ex =>
             {
-                Controller.log.Error(ex);
+                Console.WriteLine("Program: "+ex);
             });
             x.RunAsLocalSystem();
             x.UseLog4Net();

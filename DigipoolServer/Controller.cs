@@ -12,19 +12,16 @@ public class Controller
     private static readonly IPAddress IPADDRESS = IPAddress.Loopback;
     private static Server server;
     private static RFIDReader rfidReader;
-    private static List<Ball> balls = new List<Ball>();
     public static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
     //Used for service methods. Do not alter method signature
     public bool Start()
     {
-        //log.InfoFormat("start");
         server = new Server();
         rfidReader = new RFIDReader();
-        log.InfoFormat("Service has started");
+        Console.WriteLine("Service has started");
         server.Listen(IPADDRESS, PORT);
         server.AcceptTcpClientAsync();
-        log.InfoFormat("client accepted");
         while (!rfidReader.impinjReader.IsConnected)
         {
             try
@@ -32,10 +29,10 @@ public class Controller
                 rfidReader.Start();
                 rfidReader.impinjReader.TagsReported += OnTagsReported;
                 rfidReader.impinjReader.ConnectionLost += OnConnectionLost;
-                log.InfoFormat("Reader started");
+                Console.WriteLine("Reader started");
             } catch (OctaneSdkException ose)
             {
-                log.Info(ose.Message);
+                Console.WriteLine(ose);
             }
             Thread.Sleep(3000);
         }
@@ -45,55 +42,45 @@ public class Controller
     {
         server.Stop();
         rfidReader.Stop();
-        Console.WriteLine("stopped");
     }
 
     private async static void OnTagsReported(ImpinjReader sender, TagReport report)
     {
-        Tag currentBall = report.Tags[0];
-        Ball pastSighting = new Ball();
-
-        //The if statements below checks if the tag is different enough from the previous time we've seen it to bother sending
-        if (balls.Any(b => b.Epc.ToString() == currentBall.Epc.ToString()))
+        Tag currentTag = report.Tags[0];
+        Ball ball = new Ball
         {
-            pastSighting = balls.Where(t => t.Epc.ToString() == currentBall.Epc.ToString()).First();
-            ulong prevTagLastPocketedTime = Convert.ToUInt64(pastSighting.LastPocketedTime.ToString());
-            ulong tagPocketedTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
-            if (tagPocketedTime < (prevTagLastPocketedTime + rfidReader.TimeBetweenUpdates))
-            {
-                //Console.WriteLine("return from pocketedTime");
-                return;
-            }
-            pastSighting.LastPocketedTime = tagPocketedTime;
-            //Console.WriteLine("Pocketed: " + currentBall.Epc + " on Antenna: " + currentBall.AntennaPortNumber);
+            Epc = currentTag.Epc.ToString()
+        };
 
-            //update ball list with current ball
-            balls[balls.FindIndex(el => el.Epc.ToString() == currentBall.Epc.ToString())] = pastSighting;
-        } else
-        {
-            pastSighting.Epc = currentBall.Epc.ToString();
-            pastSighting.Antenna = currentBall.AntennaPortNumber;
-            pastSighting.LastSeenTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
-            pastSighting.LastPocketedTime = 0;
-            pastSighting.TableRssi = new double[17];
-            pastSighting.TableRssi[currentBall.AntennaPortNumber] = currentBall.PeakRssiInDbm;
+        Console.WriteLine(currentTag.Epc + " picked up");
 
-            balls.Add(pastSighting);
-        }
-        Console.WriteLine(currentBall.Epc + " picked up");
         if (server.ClientConnected)
         {
-            String json = Newtonsoft.Json.JsonConvert.SerializeObject(pastSighting);
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(ball);
+            Console.WriteLine(json);
             await server.SendMsgAsync(json);
-            Console.WriteLine(currentBall.Epc + " sent");
-            pastSighting.Epc = currentBall.Epc.ToString();
-            pastSighting.Antenna = currentBall.AntennaPortNumber;
-            pastSighting.TableRssi[currentBall.AntennaPortNumber] = currentBall.PeakRssiInDbm;
-            pastSighting.LastSeenTime = Convert.ToUInt64(currentBall.LastSeenTime.ToString());
+            Console.WriteLine(ball.Epc + " sent");
         }
     }
+
     void OnConnectionLost(ImpinjReader reader)
     {
-        Start();
+        Console.WriteLine("Reader disconnected");
+        bool connected = false;
+        while (!connected)
+        {
+            try
+            {
+                rfidReader.Start();
+                rfidReader.impinjReader.TagsReported += OnTagsReported;
+                rfidReader.impinjReader.ConnectionLost += OnConnectionLost;
+                Console.WriteLine("Reader reconnected");
+                connected = true;
+            } catch (OctaneSdkException ose)
+            {
+                Console.WriteLine(ose);
+            }
+            Thread.Sleep(3000);
+        }
     }
 }
