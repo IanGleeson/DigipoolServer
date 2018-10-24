@@ -10,7 +10,7 @@ class RFIDReader {
     public ImpinjReader impinjReader = new ImpinjReader();
     private const string settingsFilePath = "Reader Settings.xml";
     private readonly string readerAddress;  //Test Table: SpeedwayR-12-4D-B5.local
-    private double txPowerInDbm = 20;
+    private double txPowerInDbm;
 
     public RFIDReader() {
         if (!File.Exists(settingsFilePath))

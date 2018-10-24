@@ -34,11 +34,12 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // Submit
             // 
-            this.Submit.Location = new System.Drawing.Point(367, 140);
+            this.Submit.Location = new System.Drawing.Point(389, 152);
             this.Submit.Name = "Submit";
             this.Submit.Size = new System.Drawing.Size(96, 34);
             this.Submit.TabIndex = 0;
@@ -48,7 +49,7 @@
             // 
             // reader_Address
             // 
-            this.reader_Address.Location = new System.Drawing.Point(172, 46);
+            this.reader_Address.Location = new System.Drawing.Point(129, 46);
             this.reader_Address.Name = "reader_Address";
             this.reader_Address.Size = new System.Drawing.Size(188, 22);
             this.reader_Address.TabIndex = 1;
@@ -56,7 +57,7 @@
             // 
             // tx_Power_In_Dbm
             // 
-            this.tx_Power_In_Dbm.Location = new System.Drawing.Point(172, 90);
+            this.tx_Power_In_Dbm.Location = new System.Drawing.Point(129, 90);
             this.tx_Power_In_Dbm.Name = "tx_Power_In_Dbm";
             this.tx_Power_In_Dbm.Size = new System.Drawing.Size(188, 22);
             this.tx_Power_In_Dbm.TabIndex = 2;
@@ -65,7 +66,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(55, 49);
+            this.label1.Location = new System.Drawing.Point(12, 49);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(111, 17);
             this.label1.TabIndex = 3;
@@ -75,26 +76,37 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(52, 93);
+            this.label2.Location = new System.Drawing.Point(12, 93);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(114, 17);
             this.label2.TabIndex = 4;
             this.label2.Text = "Tx Power in Dbm";
+            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(366, 93);
+            this.label3.Location = new System.Drawing.Point(327, 93);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(57, 17);
+            this.label3.Size = new System.Drawing.Size(147, 17);
             this.label3.TabIndex = 5;
-            this.label3.Text = "Max: 25";
+            this.label3.Text = "Min: 10.00 Max: 27.00";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(3, 161);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(362, 17);
+            this.label4.TabIndex = 6;
+            this.label4.Text = "Tx Power goes up in increments of .25 e.g 10.5 or 23.75";
             // 
             // ReaderSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(486, 197);
+            this.ClientSize = new System.Drawing.Size(497, 198);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -116,5 +128,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
     }
 }

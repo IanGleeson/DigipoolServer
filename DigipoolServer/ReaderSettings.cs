@@ -34,12 +34,17 @@ namespace DigipoolServer
         {
             var readerAddress = reader_Address.Text;
             var txPowerInDbm = tx_Power_In_Dbm.Text;
-
+            
             doc.Root.Element("ReaderAddress").Value = readerAddress;
-            doc.Root.Element("TxPowerInDbm").Value = txPowerInDbm;
+            if (string.IsNullOrWhiteSpace(txPowerInDbm))
+            {
+                doc.Root.Element("TxPowerInDbm").Value = "20";
+            } else
+            {
+                doc.Root.Element("TxPowerInDbm").Value = txPowerInDbm;
+            }
             
             doc.Save(FILENAME);
-
             Application.Exit();
         }
 
@@ -54,6 +59,11 @@ namespace DigipoolServer
         }
 
         private void readerAddress_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
         {
 
         }
