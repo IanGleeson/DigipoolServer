@@ -9,7 +9,7 @@ class Server
 {
     private TcpListener tcpListener;
     private TcpClient tcpClient;
-    //private StreamWriter streamWriter;
+    private StreamWriter streamWriter;
     private NetworkStream networkStream;
     public bool ClientConnected { get; private set; } = false;
 
@@ -49,70 +49,31 @@ class Server
             Console.WriteLine("Client connected");
             ClientConnected = true;
             networkStream = tcpClient.GetStream();
-            //streamWriter = new StreamWriter(networkStream)
-            //{
-            //    AutoFlush = true
-            //};
+            streamWriter = new StreamWriter(networkStream, Encoding.UTF8, 1024, true)
+            {
+                AutoFlush = true
+            };
         } catch (SocketException se) {
             Console.WriteLine(se);
         } catch (InvalidOperationException ioe) {
             Console.WriteLine(ioe);
         }
     }
-
-    ///// <summary>
-    ///// Overload for AcceptTcpClientAsync. Used on reconnects to send dropped data to the client
-    ///// </summary>
-    ///// <param name="unsentMessage">The dropped data caught in an exception</param>
-    //private async void AcceptTcpClientAsync(string unsentMessage)
-    //{
-    //    Console.WriteLine("Waiting for client");
-    //    try
-    //    {
-    //        tcpClient = await tcpListener.AcceptTcpClientAsync();
-    //    } catch (Exception e)
-    //    {
-    //        Console.WriteLine(e);
-    //    }
-    //    Console.WriteLine("Client connected");
-    //    ClientConnected = true;
-    //    networkStream = tcpClient.GetStream();
-    //    streamWriter = new StreamWriter(networkStream)
-    //    {
-    //        AutoFlush = true
-    //    };
-    //    await SendMsgAsync(unsentMessage);
-    //}
-
+    
     /// <summary>
-    /// Writes a message to an open stream. This WILL write to a closed connection but on client reconnect the stream will
-    /// be disposed, triggering the server to reset our TCPClient and streams before resending our dropped message
+    /// Writes a message to an open stream
     /// </summary>
     /// <param name="message"></param>
-    public async Task SendMsgAsync(string message)
+    public void SendMsg(string message)
     {
         try
         {
-            using (var streamWriter = new StreamWriter(networkStream, Encoding.UTF8, 1024, true))
-            {
-                await streamWriter.WriteLineAsync(message);
-            }
-            
-        } catch (ObjectDisposedException od)
+            streamWriter.WriteLine(message);
+        } catch (Exception)
         {
-            Console.WriteLine(od);
-            //ResetClient();
-            //AcceptTcpClientAsync();
-        } catch (IOException io)
-        {
-            Console.WriteLine(io);
-            //ResetClient();
-            //AcceptTcpClientAsync();
-        } catch (InvalidOperationException ioe)
-        {
-            Console.WriteLine(ioe);
-            //ResetClient();
-            //AcceptTcpClientAsync();
+            Console.WriteLine("Client has been disconnected, reconnecting...");
+            ResetClient();
+            AcceptTcpClientAsync();
         }
     }
 
@@ -122,8 +83,11 @@ class Server
         {
             tcpClient.Close();
             tcpClient = null;
+            networkStream.Close();
+            networkStream = null;
+            streamWriter.Close();
+            streamWriter = null;
             ClientConnected = false;
-            Console.WriteLine("Client has been disconnected");
         }
     }
 }

@@ -19,9 +19,6 @@ public class Controller
     {
         server = new Server();
         rfidReader = new RFIDReader();
-        Console.WriteLine("Service has started");
-        server.Listen(IPADDRESS, PORT);
-        server.AcceptTcpClientAsync();
         while (!rfidReader.impinjReader.IsConnected)
         {
             try
@@ -29,45 +26,46 @@ public class Controller
                 rfidReader.Start();
                 rfidReader.impinjReader.TagsReported += OnTagsReported;
                 rfidReader.impinjReader.ConnectionLost += OnConnectionLost;
-                Console.WriteLine("Reader started");
             } catch (OctaneSdkException ose)
             {
                 Console.WriteLine(ose);
             }
             Thread.Sleep(3000);
         }
+        server.Listen(IPADDRESS, PORT);
+        server.AcceptTcpClientAsync();
         return true;
     }
+
     public void Stop()
     {
-        server.Stop();
-        rfidReader.Stop();
+        //server.Stop();
+        //rfidReader.Stop();
     }
 
-    private async static void OnTagsReported(ImpinjReader sender, TagReport report)
+    private static void OnTagsReported(ImpinjReader sender, TagReport report)
     {
         Tag currentTag = report.Tags[0];
         Ball ball = new Ball
         {
             Epc = currentTag.Epc.ToString()
         };
-
+        
         Console.WriteLine(currentTag.Epc + " picked up");
 
         if (server.ClientConnected)
         {
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(ball);
-            Console.WriteLine(json);
-            await server.SendMsgAsync(json);
+            server.SendMsg(json);
             Console.WriteLine(ball.Epc + " sent");
         }
     }
 
     void OnConnectionLost(ImpinjReader reader)
     {
-        Console.WriteLine("Reader disconnected");
-        bool connected = false;
-        while (!connected)
+        Console.WriteLine("Reader disconnected, reconnecting...");
+        Thread.Sleep(300);
+        while (!reader.IsConnected)
         {
             try
             {
@@ -75,12 +73,10 @@ public class Controller
                 rfidReader.impinjReader.TagsReported += OnTagsReported;
                 rfidReader.impinjReader.ConnectionLost += OnConnectionLost;
                 Console.WriteLine("Reader reconnected");
-                connected = true;
             } catch (OctaneSdkException ose)
             {
                 Console.WriteLine(ose);
             }
-            Thread.Sleep(3000);
         }
     }
 }
